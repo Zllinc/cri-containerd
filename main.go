@@ -147,7 +147,7 @@ func (s *Server) runPodSandbox(ctx context.Context, request *runtimeapi.RunPodSa
 func (s *Server) createContainer(ctx context.Context, containerName string, image client.Image) (*runtimeapi.CreateContainerResponse, error) {
 	// 先创建PodSandbox
 	podName := "test-pod"
-	cgroupParent := "system.slice:" + podName
+	cgroupParent := "system.slice:"
 	podSandboxReq := &runtimeapi.RunPodSandboxRequest{
 		Config: &runtimeapi.PodSandboxConfig{
 			Metadata: &runtimeapi.PodSandboxMetadata{
