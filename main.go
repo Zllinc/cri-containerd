@@ -146,10 +146,12 @@ func (s *Server) runPodSandbox(ctx context.Context, request *runtimeapi.RunPodSa
 // 创建容器: 调用了runPodSandbox
 func (s *Server) createContainer(ctx context.Context, containerName string, image client.Image) (*runtimeapi.CreateContainerResponse, error) {
 	// 先创建PodSandbox
+	podName := "test-pod"
+	cgroupParent := "system.slice:kubelet.slice:" + podName
 	podSandboxReq := &runtimeapi.RunPodSandboxRequest{
 		Config: &runtimeapi.PodSandboxConfig{
 			Metadata: &runtimeapi.PodSandboxMetadata{
-				Name:      "test-pod",
+				Name:      podName,
 				Namespace: "default",
 				Uid:       "1234567890",
 				Attempt:   1,
@@ -163,7 +165,7 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 				"description": "my-pod-description",
 			},
 			Linux: &runtimeapi.LinuxPodSandboxConfig{
-				CgroupParent: "system.slice:kubelet.slice:test-pod", // 格式为 slice:prefix:name
+				CgroupParent: cgroupParent, // 格式为 slice:prefix:name
 			},
 		},
 	}
