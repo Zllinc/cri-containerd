@@ -61,7 +61,7 @@ func main() {
 		log.Fatalf("failed to pull image: %v", err)
 	}
 
-	// 创建并运行容器
+	// 创建容器
 	containerResponse, err := server.createContainer(ctx, containerName, image)
 	if err != nil {
 		log.Fatalf("failed to create and start container: %v", err)
@@ -70,12 +70,20 @@ func main() {
 	// 给容器一些时间执行操作
 	time.Sleep(5 * time.Second)
 
+	// 启动容器
+	_, err = server.startContainer(ctx, &runtimeapi.StartContainerRequest{
+		ContainerId: containerResponse.ContainerId,
+	})
+	if err != nil {
+		log.Fatalf("failed to start container: %v", err)
+	}
+
 	// 提交容器为新镜像
 	err = server.commitContainer(ctx, containerResponse.ContainerId, committedImageName)
 	if err != nil {
 		log.Fatalf("failed to commit container: %v", err)
 	}
-	fmt.Printf("committed image: %s successfully! \n", committedImageName)
+	log.Default().Printf("committed image: %s successfully! \n", committedImageName)
 
 	// 删除容器
 	err = server.deleteContainer(ctx, containerResponse.ContainerId)
@@ -86,6 +94,7 @@ func main() {
 
 // 获取Server
 func getServer() (*Server, error) {
+	log.Default().Printf("connecting to containerd: %s ...\n", address)
 	// 1. 创建 gRPC 连接
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -186,7 +195,7 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 }
 
 // 运行容器
-func (s *Server) StartContainer(ctx context.Context, request *runtimeapi.StartContainerRequest) (*runtimeapi.StartContainerResponse, error) {
+func (s *Server) startContainer(ctx context.Context, request *runtimeapi.StartContainerRequest) (*runtimeapi.StartContainerResponse, error) {
 	fmt.Println("Doing start container request", "request", request)
 	return s.runtimeServiceClient.StartContainer(ctx, request)
 }
