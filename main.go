@@ -7,7 +7,10 @@ import (
 	"os"
 
 	// "syscall"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	// "github.com/containerd/containerd"
 	// "github.com/containerd/containerd/cio"
@@ -146,14 +149,20 @@ func (s *Server) runPodSandbox(ctx context.Context, request *runtimeapi.RunPodSa
 // 创建容器: 调用了runPodSandbox
 func (s *Server) createContainer(ctx context.Context, containerName string, image client.Image) (*runtimeapi.CreateContainerResponse, error) {
 	// 先创建PodSandbox
-	podName := "test-pod"
+	// podName := "test-pod"
 	cgroupParent := "system.slice"
+
+	// 生成唯一且安全的 Pod 名称和 content-id
+	podUUID := uuid.New().String()
+	podName := fmt.Sprintf("test-pod-%s", strings.ReplaceAll(podUUID, "-", "")) // 移除短横线
+	contentID := fmt.Sprintf("content-%s", podUUID)
+
 	podSandboxReq := &runtimeapi.RunPodSandboxRequest{
 		Config: &runtimeapi.PodSandboxConfig{
 			Metadata: &runtimeapi.PodSandboxMetadata{
 				Name:      podName,
 				Namespace: "default",
-				Uid:       "1234567890",
+				Uid:       podUUID,
 				Attempt:   1,
 			},
 			Hostname:     "my-pod",
@@ -162,7 +171,8 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 				"app": "my-app",
 			},
 			Annotations: map[string]string{
-				"description": "my-pod-description",
+				"devbox.sealos.io/content-id": contentID,
+				"description":                 "my-pod-description",
 			},
 			Linux: &runtimeapi.LinuxPodSandboxConfig{
 				CgroupParent: cgroupParent, // 格式为 slice:prefix:name
