@@ -64,10 +64,11 @@ func main() {
 	// 创建容器
 	containerResponse, err := server.createContainer(ctx, containerName, image)
 	if err != nil {
-		log.Fatalf("failed to create and start container: %v", err)
+		log.Fatalf("failed to create container: %v", err)
 	}
 
 	// 给容器一些时间执行操作
+	log.Default().Println("waiting for container to execute operations")
 	time.Sleep(5 * time.Second)
 
 	// 启动容器
@@ -127,18 +128,18 @@ func getServer() (*Server, error) {
 
 // 拉取镜像：拉取镜像本质还是使用的containerd.Client.Pull()
 func (s *Server) pullImage(ctx context.Context, imageName string) (client.Image, error) {
-	fmt.Printf("pulling image: %s ...\n", imageName)
+	log.Default().Printf("pulling image: %s ...\n", imageName)
 	image, err := s.containerdClient.Pull(ctx, imageName, client.WithPullUnpack)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pull image: %s, err: %v", imageName, err)
 	}
-	fmt.Printf("pulled image: %s successfully! \n", image.Name())
+	log.Default().Printf("pulled image: %s successfully! \n", image.Name())
 	return image, nil
 }
 
 // 创建PodSandbox: 创建PodSandbox本质还是使用的runtimeServiceClient.RunPodSandbox()
 func (s *Server) runPodSandbox(ctx context.Context, request *runtimeapi.RunPodSandboxRequest) (*runtimeapi.RunPodSandboxResponse, error) {
-	fmt.Println("Doing run pod sandbox request", "request", request)
+	log.Default().Println("Doing run pod sandbox request", "request", request)
 	return s.runtimeServiceClient.RunPodSandbox(ctx, request)
 }
 
@@ -160,6 +161,9 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 			},
 			Annotations: map[string]string{
 				"description": "my-pod-description",
+			},
+			Linux: &runtimeapi.LinuxPodSandboxConfig{
+				CgroupParent: "system.slice:kubelet.slice:test-pod", // 格式为 slice:prefix:name
 			},
 		},
 	}
@@ -196,7 +200,7 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 
 // 运行容器
 func (s *Server) startContainer(ctx context.Context, request *runtimeapi.StartContainerRequest) (*runtimeapi.StartContainerResponse, error) {
-	fmt.Println("Doing start container request", "request", request)
+	log.Default().Println("Doing start container request", "request", request)
 	return s.runtimeServiceClient.StartContainer(ctx, request)
 }
 
