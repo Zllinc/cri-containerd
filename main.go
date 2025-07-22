@@ -193,7 +193,8 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 
 	// 创建容器
 	containerReq := &runtimeapi.CreateContainerRequest{
-		PodSandboxId: response.PodSandboxId,
+		PodSandboxId:  response.PodSandboxId,
+		SandboxConfig: podSandboxReq.Config,
 		Config: &runtimeapi.ContainerConfig{
 			Metadata: &runtimeapi.ContainerMetadata{
 				Name:    containerName,
@@ -202,10 +203,10 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 			Image: &runtimeapi.ImageSpec{
 				Image: image.Name(),
 			},
-			Command:    []string{"/bin/sh", "-c", "echo 'Hello, World!'"},
-			WorkingDir: "/root",
-			Stdin:      true,
-			StdinOnce:  true,
+			// Command:    []string{"/bin/sh", "-c", "echo 'Hello, World!'"},
+			// WorkingDir: "/root",
+			// Stdin:      true,
+			// StdinOnce:  true,
 		},
 	}
 	responseContainer, err := s.runtimeServiceClient.CreateContainer(ctx, containerReq)
