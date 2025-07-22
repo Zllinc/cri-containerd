@@ -203,10 +203,11 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 			Image: &runtimeapi.ImageSpec{
 				Image: image.Name(),
 			},
-			// Command:    []string{"/bin/sh", "-c", "echo 'Hello, World!'"},
-			// WorkingDir: "/root",
-			// Stdin:      true,
-			// StdinOnce:  true,
+			Command:    []string{"/bin/sh", "-c", "while true; do echo 'Hello, World!'; sleep 5; done"},
+			WorkingDir: "/root",
+			Stdin:      true,
+			StdinOnce:  true,
+			LogPath:    "/var/log/my-container.log",
 		},
 	}
 	responseContainer, err := s.runtimeServiceClient.CreateContainer(ctx, containerReq)
