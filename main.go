@@ -140,7 +140,7 @@ func (s *Server) pullImage(ctx context.Context, imageName string) (client.Image,
 	return image, nil
 }
 
-// 创建PodSandbox: 创建PodSandbox本质还是使用的runtimeServiceClient.RunPodSandbox()
+// 创建PodSandbox: 创建PodSandbox本质是使用的runtimeServiceClient.RunPodSandbox()
 func (s *Server) runPodSandbox(ctx context.Context, request *runtimeapi.RunPodSandboxRequest) (*runtimeapi.RunPodSandboxResponse, error) {
 	log.Default().Println("Doing run pod sandbox request", "request", request)
 	return s.runtimeServiceClient.RunPodSandbox(ctx, request)
@@ -183,6 +183,12 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 	response, err := s.runPodSandbox(ctx, podSandboxReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run pod sandbox: %v", err)
+	}
+
+	// 验证 PodSandboxId 有效性
+	log.Default().Println("PodSandboxId: ", response.PodSandboxId)
+	if response.PodSandboxId == "" {
+		return nil, fmt.Errorf("invalid PodSandboxId: empty")
 	}
 
 	// 创建容器
