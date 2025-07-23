@@ -8,6 +8,7 @@ import (
 
 	"github.com/containerd/containerd/v2/pkg/namespaces"
 	"github.com/spf13/cobra"
+	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
 var (
@@ -55,10 +56,13 @@ var createCmd = &cobra.Command{
 		// 返回容器ID
 		log.Default().Println("container id: ", containerResponse.ContainerId)
 
-		// // 启动容器
-		// server.StartContainer(ctx, &runtimeapi.StartContainerRequest{
-		// 	ContainerId: containerResponse.ContainerId,
-		// })
+		// 启动容器
+		_, err = server.StartContainer(ctx, &runtimeapi.StartContainerRequest{
+			ContainerId: containerResponse.ContainerId,
+		})
+		if err != nil {
+			log.Fatalf("failed to start container: %v", err)
+		}
 	},
 }
 
@@ -67,8 +71,9 @@ func init() {
 	rootCmd.AddCommand(createCmd)
 	createCmd.Flags().StringVarP(&containerName, "container-name", "c", "", "container name")
 	createCmd.Flags().StringVarP(&imageName, "image-name", "i", "", "image name")
-	createCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "namespace")
+	// 默认使用k8s.io namespace
+	createCmd.Flags().StringVarP(&namespace, "namespace", "n", "k8s.io", "namespace")
 	createCmd.MarkFlagRequired("container-name")
 	createCmd.MarkFlagRequired("image-name")
-	createCmd.MarkFlagRequired("namespace")
+	// createCmd.MarkFlagRequired("namespace")
 }
