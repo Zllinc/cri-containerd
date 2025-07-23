@@ -19,9 +19,9 @@ var commitCmd = &cobra.Command{
 	Short: "commit a container",
 	Long:  `commit a container, it can help you to commit a container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 2 {
-			log.Fatalf("Usage: %s commit -c [container-ID] -i [image-name]", cmd.Use)
-		}
+		// if len(args) < 2 {
+		// 	log.Fatalf("Usage: %s commit -c [container-ID] -i [image-name]", cmd.Use)
+		// }
 
 		// 获取server
 		server, err := internal.GetServer()

@@ -16,9 +16,9 @@ var deleteCmd = &cobra.Command{
 	Short: "delete a container",
 	Long:  `delete a container, it can help you to delete a container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			log.Fatalf("Usage: %s delete -c [container-ID]", cmd.Use)
-		}
+		// if len(args) < 1 {
+		// 	log.Fatalf("Usage: %s delete -c [container-ID]", cmd.Use)
+		// }
 
 		// 获取server
 		server, err := internal.GetServer()

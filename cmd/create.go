@@ -23,9 +23,9 @@ var createCmd = &cobra.Command{
 	Short: "create a container",
 	Long:  `create a container, it can help you to create a container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 3 {
-			log.Fatalf("Usage: %s create -c [container-name] -i [image-name] -n [namespace]", cmd.Use)
-		}
+		// if len(args) < 2 {
+		// 	log.Fatalf("Usage: %s create -c [container-name] -i [image-name] -n [namespace]", cmd.Use)
+		// }
 		// containerName = args[0]
 		// imageName = args[1]
 		// namespace = args[2]
