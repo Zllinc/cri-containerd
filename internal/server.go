@@ -28,7 +28,7 @@ const (
 )
 
 // 获取Server
-func getServer() (*Server, error) {
+func GetServer() (*Server, error) {
 	log.Default().Printf("connecting to containerd: %s ...\n", address)
 	// 1. 创建 gRPC 连接
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -61,7 +61,7 @@ func getServer() (*Server, error) {
 }
 
 // 拉取镜像：拉取镜像本质还是使用的containerd.Client.Pull()
-func (s *Server) pullImage(ctx context.Context, imageName string) (client.Image, error) {
+func (s *Server) PullImage(ctx context.Context, imageName string) (client.Image, error) {
 	log.Default().Printf("pulling image: %s ...\n", imageName)
 	image, err := s.containerdClient.Pull(ctx, imageName, client.WithPullUnpack)
 	if err != nil {
@@ -72,13 +72,13 @@ func (s *Server) pullImage(ctx context.Context, imageName string) (client.Image,
 }
 
 // 创建PodSandbox: 创建PodSandbox本质是使用的runtimeServiceClient.RunPodSandbox()
-func (s *Server) runPodSandbox(ctx context.Context, request *runtimeapi.RunPodSandboxRequest) (*runtimeapi.RunPodSandboxResponse, error) {
+func (s *Server) RunPodSandbox(ctx context.Context, request *runtimeapi.RunPodSandboxRequest) (*runtimeapi.RunPodSandboxResponse, error) {
 	log.Default().Println("Doing run pod sandbox request", "request", request)
 	return s.runtimeServiceClient.RunPodSandbox(ctx, request)
 }
 
 // 创建容器: 调用了runPodSandbox
-func (s *Server) createContainer(ctx context.Context, containerName string, image client.Image) (*runtimeapi.CreateContainerResponse, error) {
+func (s *Server) CreateContainer(ctx context.Context, containerName string, image client.Image) (*runtimeapi.CreateContainerResponse, error) {
 	// 先创建PodSandbox
 	// podName := "test-pod"
 	cgroupParent := "system.slice"
@@ -111,7 +111,7 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 		},
 	}
 
-	response, err := s.runPodSandbox(ctx, podSandboxReq)
+	response, err := s.RunPodSandbox(ctx, podSandboxReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run pod sandbox: %v", err)
 	}
@@ -150,18 +150,18 @@ func (s *Server) createContainer(ctx context.Context, containerName string, imag
 }
 
 // 运行容器
-func (s *Server) startContainer(ctx context.Context, request *runtimeapi.StartContainerRequest) (*runtimeapi.StartContainerResponse, error) {
+func (s *Server) StartContainer(ctx context.Context, request *runtimeapi.StartContainerRequest) (*runtimeapi.StartContainerResponse, error) {
 	log.Default().Println("Doing start container request", "request", request)
 	return s.runtimeServiceClient.StartContainer(ctx, request)
 }
 
 // commit容器
-func (s *Server) commitContainer(ctx context.Context, containerID, committedImageName string) error {
+func (s *Server) CommitContainer(ctx context.Context, containerID, committedImageName string) error {
 	return s.imageClient.Commit(ctx, committedImageName, containerID, true)
 }
 
 // delete容器
-func (s *Server) deleteContainer(ctx context.Context, containerID string) error {
+func (s *Server) DeleteContainer(ctx context.Context, containerID string) error {
 	req := &runtimeapi.RemoveContainerRequest{
 		ContainerId: containerID,
 	}
