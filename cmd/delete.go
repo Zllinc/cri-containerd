@@ -27,11 +27,11 @@ var deleteCmd = &cobra.Command{
 		}
 
 		// 删除容器
-		err = server.DeleteContainer(context.Background(), containerID)
+		err = server.DeleteContainer(context.Background(), deleteContainerID)
 		if err != nil {
 			log.Fatalf("failed to delete container: %v", err)
 		}
-		log.Default().Printf("deleted container: %s successfully! \n", containerID)
+		log.Default().Printf("deleted container: %s successfully! \n", deleteContainerID)
 	},
 }
 
