@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"io"
 	"strings"
-
+	"github.com/containerd/nerdctl/v2/pkg/api/types"
+	"github.com/containerd/nerdctl/v2/pkg/cmd/container"
 	"github.com/containerd/containerd/v2/client"
 	"github.com/google/uuid"
-	imageutil "github.com/labring/cri-shim/pkg/image"
+	// imageutil "github.com/labring/cri-shim/pkg/image"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
@@ -18,7 +19,7 @@ import (
 type Server struct {
 	runtimeServiceClient runtimeapi.RuntimeServiceClient // 与containerd进行交互的client
 	containerdClient     *client.Client                  // 也是与containerd进行交互的client
-	imageClient          imageutil.ImageInterface        // 与image进行交互的client
+	// imageClient          imageutil.ImageInterface        // 与image进行交互的client
 }
 
 const (
@@ -46,17 +47,17 @@ func GetServer() (*Server, error) {
 	client := runtimeapi.NewRuntimeServiceClient(conn)
 
 	// 4. 创建imageClient
-	fStdout := os.Stdout // 或 os.DevNull
+	// fStdout := os.Stdout // 或 os.DevNull
 
-	imageClient, err := imageutil.NewImageInterface(namespace, address, fStdout)
-	if err != nil {
-		panic(err)
-	}
+	// imageClient, err := imageutil.NewImageInterface(namespace, address, fStdout)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	return &Server{
 		runtimeServiceClient: client,
 		containerdClient:     containerdClient,
-		imageClient:          imageClient,
+		// imageClient:          imageClient,
 	}, nil
 }
 
@@ -157,7 +158,18 @@ func (s *Server) StartContainer(ctx context.Context, request *runtimeapi.StartCo
 
 // commit容器
 func (s *Server) CommitContainer(ctx context.Context, containerID, committedImageName string) error {
-	return s.imageClient.Commit(ctx, committedImageName, containerID, true)
+	global := types.GlobalCommandOptions{
+		Namespace:        namespace,
+		Address:          address,
+		DataRoot:         "/var/lib/containerd",
+		InsecureRegistry: true,
+	}
+	opt := types.ContainerCommitOptions{
+		Stdout:   io.Discard,
+		GOptions: global,
+		Pause:    true,
+	}
+	return container.Commit(ctx,s.containerdClient, committedImageName, containerID, opt)
 }
 
 // delete容器
