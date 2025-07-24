@@ -167,7 +167,7 @@ func (s *Server) CommitContainer(ctx context.Context, containerID, committedImag
 	opt := types.ContainerCommitOptions{
 		Stdout:   io.Discard,
 		GOptions: global,
-		Pause:    true,
+		Pause:    false,
 	}
 	return container.Commit(ctx,s.containerdClient, committedImageName, containerID, opt)
 }
