@@ -8,7 +8,7 @@ import (
 
 	"github.com/containerd/containerd/v2/pkg/namespaces"
 	"github.com/spf13/cobra"
-	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
+	// runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
 var (
@@ -56,13 +56,13 @@ var createCmd = &cobra.Command{
 		// 返回容器ID
 		log.Default().Println("container id: ", containerResponse.ContainerId)
 
-		// 启动容器
-		_, err = server.StartContainer(ctx, &runtimeapi.StartContainerRequest{
-			ContainerId: containerResponse.ContainerId,
-		})
-		if err != nil {
-			log.Fatalf("failed to start container: %v", err)
-		}
+		// // 启动容器
+		// _, err = server.StartContainer(ctx, &runtimeapi.StartContainerRequest{
+		// 	ContainerId: containerResponse.ContainerId,
+		// })
+		// if err != nil {
+		// 	log.Fatalf("failed to start container: %v", err)
+		// }
 	},
 }
 
