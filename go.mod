@@ -2,13 +2,22 @@ module cri-containerd
 
 go 1.24.3
 
-require github.com/containerd/containerd/v2 v2.1.3
+require (
+	github.com/containerd/containerd/v2 v2.1.3
+	github.com/containerd/nerdctl/v2 v2.1.3
+	github.com/google/uuid v1.6.0
+	github.com/spf13/cobra v1.9.1
+	google.golang.org/grpc v1.72.2
+	k8s.io/cri-api v0.33.3
+)
 
-// replace github.com/containerd/nerdctl/v2 => github.com/luanshaotong/nerdctl v2
+replace github.com/containerd/nerdctl => github.com/luanshaotong/nerdctl/v2 v2.0.0-20250714082639-507bfee191dd
+
+replace github.com/containerd/nerdctl/v2 => github.com/luanshaotong/nerdctl/v2 v2.0.0-20250714082639-507bfee191dd
+
+replace github.com/containerd/nerdctl/mod/tigron => github.com/luanshaotong/nerdctl/mod/tigron v0.0.0-20250714082639-507bfee191dd
 
 require (
-	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
-	github.com/AdamKorcz/go-118-fuzz-build v0.0.0-20231105174938-2b5cbb29f3e2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -26,7 +35,6 @@ require (
 	github.com/containerd/go-runc v1.1.0 // indirect
 	github.com/containerd/imgcrypt/v2 v2.0.1 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/containerd/nerdctl/v2 v2.1.3 // indirect
 	github.com/containerd/nydus-snapshotter v0.15.2 // indirect
 	github.com/containerd/platforms v1.0.0-rc.1 // indirect
 	github.com/containerd/plugin v1.0.0 // indirect
@@ -41,14 +49,12 @@ require (
 	github.com/coreos/go-iptables v0.8.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/djherbis/times v1.6.0 // indirect
-	github.com/docker/cli v28.3.1+incompatible // indirect
-	github.com/docker/docker v28.3.1+incompatible // indirect
+	github.com/docker/cli v28.3.2+incompatible // indirect
+	github.com/docker/docker v28.3.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
-	github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/fahedouch/go-logrotate v0.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -63,13 +69,10 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.5.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
-	github.com/labring/cri-shim v0.0.0-20250707100030-6b7fa9595f38 // indirect
-	github.com/labring/layer-squash v0.3.0 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -106,9 +109,9 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/smallstep/pkcs7 v0.1.1 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/stefanberger/go-pkcs11uri v0.0.0-20230803200340-78284954bff6 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
 	github.com/vbatts/tar-split v0.11.6 // indirect
@@ -121,20 +124,17 @@ require (
 	go.opentelemetry.io/otel v1.35.0 // indirect
 	go.opentelemetry.io/otel/metric v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
-	golang.org/x/crypto v0.39.0 // indirect
+	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.25.0 // indirect
-	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
-	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
+	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/term v0.33.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250218202821-56aae31c358a // indirect
-	google.golang.org/grpc v1.72.2 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/cri-api v0.33.3 // indirect
 	lukechampine.com/blake3 v1.3.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 	tags.cncf.io/container-device-interface v1.0.1 // indirect
