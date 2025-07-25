@@ -36,6 +36,8 @@ var createCmd = &cobra.Command{
 			log.Fatalf("failed to get server: %v", err)
 		}
 
+		log.Println("namespace: ", namespace)
+
 		// 拉取镜像
 		ctx := namespaces.WithNamespace(context.Background(), namespace)
 		image, err := server.PullImage(ctx, imageName)
