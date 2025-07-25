@@ -86,10 +86,10 @@ func (s *Server) CreateContainer(ctx context.Context, containerName string, imag
 	// podName := "test-pod"
 	cgroupParent := "system.slice"
 
-	// 生成唯一且安全的 Pod 名称和 content-id
+	// 生成唯一且安全的 Pod 名称
 	podUUID := uuid.New().String()
 	podName := fmt.Sprintf("test-pod-%s", strings.ReplaceAll(podUUID, "-", "")) // 移除短横线
-	contentID := fmt.Sprintf("content-%s", podUUID)
+	// contentID := fmt.Sprintf("content-%s", podUUID)
 
 	podSandboxReq := &runtimeapi.RunPodSandboxRequest{
 		Config: &runtimeapi.PodSandboxConfig{
@@ -105,7 +105,7 @@ func (s *Server) CreateContainer(ctx context.Context, containerName string, imag
 				"app": "my-app",
 			},
 			Annotations: map[string]string{
-				"devbox.sealos.io/content-id": contentID,
+				// "devbox.sealos.io/content-id": contentID,
 				"description":                 "my-pod-description",
 			},
 			Linux: &runtimeapi.LinuxPodSandboxConfig{
