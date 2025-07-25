@@ -25,7 +25,7 @@ type Server struct {
 }
 
 const (
-	namespace = "k8s.io"
+	namespace = "test.io"
 	address   = "unix:///var/run/containerd/containerd.sock"
 	// fStdout = os.Stdout // 或 os.DevNull
 )
