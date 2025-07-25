@@ -4,21 +4,24 @@ import (
 	"context"
 	"log"
 
-	"cri-containerd/internal"
-
+	"github.com/containerd/containerd/v2/pkg/namespaces"
 	"github.com/spf13/cobra"
+
+	"cri-containerd/internal"
 )
 
-var deleteContainerID string
+var (
+	deleteContainerName string
+	deleteNamespace     string
+)
 
+// deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "delete a container",
-	Long:  `delete a container, it can help you to delete a container.`,
+	Short: "Delete a container",
+	Long:  "Delete a container and its associated resources",
 	Run: func(cmd *cobra.Command, args []string) {
-		// if len(args) < 1 {
-		// 	log.Fatalf("Usage: %s delete -c [container-ID]", cmd.Use)
-		// }
+		log.Printf("Deleting container: %s in namespace: %s", deleteContainerName, deleteNamespace)
 
 		// 获取server
 		server, err := internal.GetServer()
@@ -26,17 +29,22 @@ var deleteCmd = &cobra.Command{
 			log.Fatalf("failed to get server: %v", err)
 		}
 
+		// 设置正确的 namespace 上下文
+		ctx := namespaces.WithNamespace(context.Background(), deleteNamespace)
+
 		// 删除容器
-		err = server.DeleteContainer(context.Background(), deleteContainerID)
+		err = server.DeleteContainerDirectly(ctx, deleteContainerName)
 		if err != nil {
 			log.Fatalf("failed to delete container: %v", err)
 		}
-		log.Default().Printf("deleted container: %s successfully! \n", deleteContainerID)
+
+		log.Printf("✅ Container %s deleted successfully!", deleteContainerName)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(deleteCmd)
-	deleteCmd.Flags().StringVarP(&deleteContainerID, "container-id", "c", "", "container id")
-	deleteCmd.MarkFlagRequired("container-id")
+	deleteCmd.Flags().StringVarP(&deleteContainerName, "container-name", "c", "", "container name to delete")
+	deleteCmd.Flags().StringVarP(&deleteNamespace, "namespace", "n", "test.io", "containerd namespace")
+	deleteCmd.MarkFlagRequired("container-name")
 }

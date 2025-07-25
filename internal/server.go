@@ -11,8 +11,6 @@ import (
 	"github.com/containerd/nerdctl/v2/pkg/api/types"
 	"github.com/containerd/nerdctl/v2/pkg/cmd/container"
 	"github.com/google/uuid"
-
-	// imageutil "github.com/labring/cri-shim/pkg/image"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
@@ -211,10 +209,20 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 		return "", fmt.Errorf("failed to get image: %v", err)
 	}
 
-	// 2. 创建容器（使用简化的方式）
+	// 2. 创建容器
+	// 添加 annotations/labels
+	annotations := map[string]string{
+		"devbox.sealos.io/content-id": "cri-containerd-direct",
+		"namespace":                   namespace,
+		"image.name":                  imageName,
+		"container.type":              "direct",
+		"description":                 "Container created directly via containerd API",
+	}
+
 	container, err := s.containerdClient.NewContainer(ctx, containerName,
 		client.WithImage(image),
 		client.WithNewSnapshot(containerName, image),
+		client.WithContainerLabels(annotations), // 添加 annotations
 		client.WithNewSpec(oci.WithImageConfig(image),
 			oci.WithProcessArgs("/bin/sh", "-c", "while true; do echo 'Hello, World!'; sleep 5; done"),
 			oci.WithHostname("test-container"),
@@ -224,7 +232,7 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 		return "", fmt.Errorf("failed to create container: %v", err)
 	}
 
-	// 3. 创建任务（相当于启动容器）
+	// 3. 创建任务：启动容器
 	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
 	if err != nil {
 		return "", fmt.Errorf("failed to create task: %v", err)
@@ -237,4 +245,151 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 	}
 
 	return container.ID(), nil
+}
+
+// GetContainerAnnotations 获取容器的 annotations
+func (s *Server) GetContainerAnnotations(ctx context.Context, containerName string) (map[string]string, error) {
+	container, err := s.containerdClient.LoadContainer(ctx, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load container: %v", err)
+	}
+
+	// 获取容器的 labels（即 annotations）
+	labels, err := container.Labels(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container labels: %v", err)
+	}
+	return labels, nil
+}
+
+// GetContainerInfo 获取容器的详细信息
+func (s *Server) GetContainerInfo(ctx context.Context, containerName string) (interface{}, error) {
+	container, err := s.containerdClient.LoadContainer(ctx, containerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load container: %v", err)
+	}
+
+	// 获取容器的详细信息
+	info, err := container.Info(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get container info: %v", err)
+	}
+
+	return info, nil
+}
+
+// DeleteContainerDirectly 直接删除容器（简化版本）
+func (s *Server) DeleteContainerDirectly(ctx context.Context, containerName string) error {
+	// 1. 加载容器
+	container, err := s.containerdClient.LoadContainer(ctx, containerName)
+	if err != nil {
+		return fmt.Errorf("failed to load container: %v", err)
+	}
+
+	// 2. 尝试获取并停止任务
+	task, err := container.Task(ctx, nil)
+	if err == nil {
+		log.Printf("Stopping task for container: %s", containerName)
+
+		// 尝试优雅停止
+		err = task.Kill(ctx, 15) // SIGTERM
+		if err != nil {
+			log.Printf("Warning: failed to send SIGTERM: %v", err)
+			// 强制停止
+			task.Kill(ctx, 9) // SIGKILL
+		}
+
+		// 删除任务
+		_, err = task.Delete(ctx)
+		if err != nil {
+			log.Printf("Warning: failed to delete task: %v", err)
+		} else {
+			log.Printf("Task deleted for container: %s", containerName)
+		}
+	}
+
+	// 3. 删除容器（包含快照）
+	err = container.Delete(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to delete container: %v", err)
+	}
+
+	log.Printf("Container deleted: %s", containerName)
+	return nil
+}
+
+// ListContainers 列出容器
+func (s *Server) ListContainers(ctx context.Context) ([]string, error) {
+	containers, err := s.containerdClient.Containers(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list containers: %v", err)
+	}
+
+	var containerIDs []string
+	for _, container := range containers {
+		containerIDs = append(containerIDs, container.ID())
+	}
+
+	return containerIDs, nil
+}
+
+// CleanupOrphanContainers 清理孤儿容器（垃圾回收）
+func (s *Server) CleanupOrphanContainers(ctx context.Context, namespace string) error {
+	log.Printf("Starting cleanup in namespace: %s", namespace)
+
+	// 获取所有容器
+	containers, err := s.containerdClient.Containers(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to list containers: %v", err)
+	}
+
+	var deletedCount int
+	for _, container := range containers {
+		// 检查容器是否有对应的运行任务
+		task, err := container.Task(ctx, nil)
+		if err != nil {
+			// 没有任务的容器可能是孤儿容器
+			log.Printf("Found orphan container (no task): %s", container.ID())
+
+			// 尝试删除
+			err = container.Delete(ctx, client.WithSnapshotCleanup)
+			if err != nil {
+				log.Printf("Failed to delete orphan container %s: %v", container.ID(), err)
+			} else {
+				log.Printf("Deleted orphan container: %s", container.ID())
+				deletedCount++
+			}
+			continue
+		}
+
+		// 检查任务状态
+		status, err := task.Status(ctx)
+		if err != nil {
+			log.Printf("Failed to get task status for %s: %v", container.ID(), err)
+			continue
+		}
+
+		// 清理已停止的容器
+		if status.Status != "running" {
+			log.Printf("Found stopped container: %s (status: %s)", container.ID(), status.Status)
+
+			// 删除任务
+			_, err = task.Delete(ctx)
+			if err != nil {
+				log.Printf("Failed to delete task for %s: %v", container.ID(), err)
+			}
+
+			// 删除容器
+			err = container.Delete(ctx, client.WithSnapshotCleanup)
+			if err != nil {
+				log.Printf("Failed to delete stopped container %s: %v", container.ID(), err)
+			} else {
+				log.Printf("Deleted stopped container: %s", container.ID())
+				deletedCount++
+			}
+		}
+	}
+
+	log.Printf("Cleanup completed. Deleted %d containers", deletedCount)
+	return nil
 }
