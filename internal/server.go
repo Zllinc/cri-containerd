@@ -214,7 +214,7 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 	// 2. 创建容器（使用简化的方式）
 	container, err := s.containerdClient.NewContainer(ctx, containerName,
 		client.WithImage(image),
-		client.WithNewSnapshot(containerName+"-snapshot", image),
+		client.WithNewSnapshot(containerName, image),
 		client.WithNewSpec(oci.WithImageConfig(image),
 			oci.WithProcessArgs("/bin/sh", "-c", "while true; do echo 'Hello, World!'; sleep 5; done"),
 			oci.WithHostname("test-container"),

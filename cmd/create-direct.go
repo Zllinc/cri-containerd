@@ -39,11 +39,9 @@ var createDirectCmd = &cobra.Command{
 			log.Fatalf("failed to create container directly: %v", err)
 		}
 
-		log.Printf("✅ Container created successfully!")
-		log.Printf("📋 Container ID: %s", containerID)
-		log.Printf("🏷️  Namespace: %s", directNamespace)
-		log.Printf("🔍 This container should be invisible to kubelet!")
-		log.Printf("")
+		log.Printf("✅ Container: %s created successfully in namespace: %s", containerID, directNamespace)
+		// log.Printf("📋 Container ID: %s", containerID)
+		// log.Printf("🏷️  Namespace: %s", directNamespace)
 		log.Printf("💡 To commit this container, use:")
 		log.Printf("   ./cri-containerd commit %s <new-image-name>", containerID)
 
