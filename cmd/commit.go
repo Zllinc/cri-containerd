@@ -12,6 +12,7 @@ import (
 var (
 	committedImageName string
 	containerID        string
+	commitNamespace    string
 )
 
 var commitCmd = &cobra.Command{
@@ -30,7 +31,7 @@ var commitCmd = &cobra.Command{
 		}
 
 		// 提交容器为新镜像
-		ctx := namespaces.WithNamespace(context.Background(), namespace)
+		ctx := namespaces.WithNamespace(context.Background(), commitNamespace)
 		err = server.CommitContainer(ctx, containerID, committedImageName)
 		if err != nil {
 			log.Fatalf("failed to commit container: %v", err)
@@ -44,6 +45,7 @@ func init() {
 	rootCmd.AddCommand(commitCmd)
 	commitCmd.Flags().StringVarP(&containerID, "container-id", "c", "", "container id")
 	commitCmd.Flags().StringVarP(&committedImageName, "image-name", "i", "", "committed image name")
+	commitCmd.Flags().StringVarP(&commitNamespace, "namespace", "n", "test.io", "containerd namespace")
 	commitCmd.MarkFlagRequired("container-id")
 	commitCmd.MarkFlagRequired("image-name")
 
