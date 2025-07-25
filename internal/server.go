@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 
-	"github.com/containerd/containerd/v2/core/containers"
 	"github.com/containerd/containerd/v2/pkg/cio"
 	"github.com/containerd/containerd/v2/pkg/oci"
 )
@@ -212,31 +211,26 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 		return "", fmt.Errorf("failed to get image: %v", err)
 	}
 
-	// 2. 创建容器规格
-	spec, err := oci.GenerateSpec(ctx, s.containerdClient, &containers.Container{
-		ID: containerName,
-	}, oci.WithImageConfig(image), oci.WithProcessArgs("/bin/sh", "-c", "while true; do echo 'Hello, World!'; sleep 5; done"))
-	if err != nil {
-		return "", fmt.Errorf("failed to generate spec: %v", err)
-	}
-
-	// 3. 创建容器
+	// 2. 创建容器（使用简化的方式）
 	container, err := s.containerdClient.NewContainer(ctx, containerName,
 		client.WithImage(image),
 		client.WithNewSnapshot(containerName+"-snapshot", image),
-		client.WithSpec(spec),
+		client.WithNewSpec(oci.WithImageConfig(image),
+			oci.WithProcessArgs("/bin/sh", "-c", "while true; do echo 'Hello, World!'; sleep 5; done"),
+			oci.WithHostname("test-container"),
+		),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to create container: %v", err)
 	}
 
-	// 4. 创建任务（相当于启动容器）
+	// 3. 创建任务（相当于启动容器）
 	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
 	if err != nil {
 		return "", fmt.Errorf("failed to create task: %v", err)
 	}
 
-	// 5. 启动任务
+	// 4. 启动任务
 	err = task.Start(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to start task: %v", err)
