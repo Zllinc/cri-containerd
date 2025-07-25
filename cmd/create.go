@@ -8,7 +8,7 @@ import (
 
 	"github.com/containerd/containerd/v2/pkg/namespaces"
 	"github.com/spf13/cobra"
-	// runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
+	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
 var (
@@ -23,13 +23,6 @@ var createCmd = &cobra.Command{
 	Short: "create a container",
 	Long:  `create a container, it can help you to create a container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// if len(args) < 2 {
-		// 	log.Fatalf("Usage: %s create -c [container-name] -i [image-name] -n [namespace]", cmd.Use)
-		// }
-		// containerName = args[0]
-		// imageName = args[1]
-		// namespace = args[2]
-
 		// 获取server
 		server, err := internal.GetServer()
 		if err != nil {
@@ -40,6 +33,7 @@ var createCmd = &cobra.Command{
 
 		// 拉取镜像
 		ctx := namespaces.WithNamespace(context.Background(), namespace)
+		log.Println("create.go: ctx.Namespace: ", ctx.Value("namespace"))
 		image, err := server.PullImage(ctx, imageName)
 		if err != nil {
 			log.Fatalf("failed to pull image: %v", err)
@@ -58,13 +52,13 @@ var createCmd = &cobra.Command{
 		// 返回容器ID
 		log.Default().Println("container id: ", containerResponse.ContainerId)
 
-		// // 启动容器
-		// _, err = server.StartContainer(ctx, &runtimeapi.StartContainerRequest{
-		// 	ContainerId: containerResponse.ContainerId,
-		// })
-		// if err != nil {
-		// 	log.Fatalf("failed to start container: %v", err)
-		// }
+		// 启动容器
+		_, err = server.StartContainer(ctx, &runtimeapi.StartContainerRequest{
+			ContainerId: containerResponse.ContainerId,
+		})
+		if err != nil {
+			log.Fatalf("failed to start container: %v", err)
+		}
 	},
 }
 

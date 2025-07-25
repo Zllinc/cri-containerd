@@ -83,6 +83,7 @@ func (s *Server) RunPodSandbox(ctx context.Context, request *runtimeapi.RunPodSa
 // 创建容器: 调用了runPodSandbox
 func (s *Server) CreateContainer(ctx context.Context, containerName string, image client.Image, namespace string) (*runtimeapi.CreateContainerResponse, error) {
 	log.Println("context.Namespace: ", ctx.Value("namespace"))
+	log.Println("namespace: ", namespace)
 	// 先创建PodSandbox
 	// podName := "test-pod"
 	cgroupParent := "system.slice"
@@ -150,14 +151,14 @@ func (s *Server) CreateContainer(ctx context.Context, containerName string, imag
 		return nil, fmt.Errorf("failed to create container: %v", err)
 	}
 
-	// start container
-	startContainerReq := &runtimeapi.StartContainerRequest{
-		ContainerId: responseContainer.ContainerId,
-	}
-	_, err = s.StartContainer(ctx, startContainerReq)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start container: %v", err)
-	}
+	// // start container
+	// startContainerReq := &runtimeapi.StartContainerRequest{
+	// 	ContainerId: responseContainer.ContainerId,
+	// }
+	// _, err = s.StartContainer(ctx, startContainerReq)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to start container: %v", err)
+	// }
 
 	return responseContainer, nil
 }
