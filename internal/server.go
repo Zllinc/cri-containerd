@@ -106,7 +106,7 @@ func (s *Server) CreateContainer(ctx context.Context, containerName string, imag
 			},
 			Annotations: map[string]string{
 				// "devbox.sealos.io/content-id": contentID,
-				"description":                 "my-pod-description",
+				"description": "my-pod-description",
 			},
 			Linux: &runtimeapi.LinuxPodSandboxConfig{
 				CgroupParent: cgroupParent, // 格式为 slice:prefix:name

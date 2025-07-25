@@ -71,8 +71,9 @@ func init() {
 	rootCmd.AddCommand(createCmd)
 	createCmd.Flags().StringVarP(&containerName, "container-name", "c", "", "container name")
 	createCmd.Flags().StringVarP(&imageName, "image-name", "i", "", "image name")
-	// 默认使用k8s.io namespace
-	createCmd.Flags().StringVarP(&namespace, "namespace", "n", "k8s.io", "namespace")
+	// 使用一个 kubelet 不管理的 namespace
+	createCmd.Flags().StringVarP(&namespace, "namespace", "n", "test.io", "namespace")
+	// createCmd.Flags().BoolVarP(&keepRunning, "keep-running", "k", false, "keep program running to prevent container cleanup")
 	createCmd.MarkFlagRequired("container-name")
 	createCmd.MarkFlagRequired("image-name")
 	// createCmd.MarkFlagRequired("namespace")
