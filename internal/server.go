@@ -3,13 +3,15 @@ package internal
 import (
 	"context"
 	"fmt"
-	"log"
 	"io"
+	"log"
 	"strings"
+
+	"github.com/containerd/containerd/v2/client"
 	"github.com/containerd/nerdctl/v2/pkg/api/types"
 	"github.com/containerd/nerdctl/v2/pkg/cmd/container"
-	"github.com/containerd/containerd/v2/client"
 	"github.com/google/uuid"
+
 	// imageutil "github.com/labring/cri-shim/pkg/image"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -168,8 +170,11 @@ func (s *Server) CommitContainer(ctx context.Context, containerID, committedImag
 		Stdout:   io.Discard,
 		GOptions: global,
 		Pause:    false,
+		DevboxOptions: types.DevboxOptions{
+			RemoveBaseImageTopLayer: true,
+		},
 	}
-	return container.Commit(ctx,s.containerdClient, committedImageName, containerID, opt)
+	return container.Commit(ctx, s.containerdClient, committedImageName, containerID, opt)
 }
 
 // delete容器

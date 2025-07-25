@@ -11,11 +11,11 @@ require (
 	k8s.io/cri-api v0.33.3
 )
 
-replace github.com/containerd/nerdctl => github.com/luanshaotong/nerdctl/v2 v2.0.0-20250714082639-507bfee191dd
+replace github.com/containerd/nerdctl => github.com/luanshaotong/nerdctl/v2 v2.0.0-20250717075412-9690955bbfc2
 
-replace github.com/containerd/nerdctl/v2 => github.com/luanshaotong/nerdctl/v2 v2.0.0-20250714082639-507bfee191dd
+replace github.com/containerd/nerdctl/v2 => github.com/luanshaotong/nerdctl/v2 v2.0.0-20250717075412-9690955bbfc2
 
-replace github.com/containerd/nerdctl/mod/tigron => github.com/luanshaotong/nerdctl/mod/tigron v0.0.0-20250714082639-507bfee191dd
+replace github.com/containerd/nerdctl/mod/tigron => github.com/luanshaotong/nerdctl/mod/tigron v0.0.0-20250717075412-9690955bbfc2
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
