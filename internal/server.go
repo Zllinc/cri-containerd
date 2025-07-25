@@ -291,36 +291,17 @@ func (s *Server) DeleteContainerDirectly(ctx context.Context, containerName stri
 	if err == nil {
 		log.Printf("Stopping task for container: %s", containerName)
 
-		// 检查任务状态
-		status, err := task.Status(ctx)
+		// 直接强制杀死任务（避免等待问题）
+		err = task.Kill(ctx, 9) // SIGKILL
 		if err != nil {
-			log.Printf("Warning: failed to get task status: %v", err)
-		} else if status.Status == "running" {
-			// 发送终止信号
-			err = task.Kill(ctx, 15) // SIGTERM
-			if err != nil {
-				log.Printf("Warning: failed to send SIGTERM: %v", err)
-				// 强制停止
-				err = task.Kill(ctx, 9) // SIGKILL
-				if err != nil {
-					log.Printf("Warning: failed to send SIGKILL: %v", err)
-				}
-			}
-
-			// 等待任务退出
-			log.Printf("Waiting for task to stop...")
-			exitStatus, err := task.Wait(ctx)
-			if err != nil {
-				log.Printf("Warning: task wait failed: %v", err)
-			} else {
-				// Wait 返回一个 channel，需要从中读取
-				status := <-exitStatus
-				log.Printf("Task exited with status: %d", status.ExitCode())
-			}
+			log.Printf("Warning: failed to send SIGKILL: %v", err)
+		} else {
+			log.Printf("Sent SIGKILL to task")
 		}
 
-		// 删除任务
-		_, err = task.Delete(ctx)
+		// 简短等待后删除任务
+		log.Printf("Deleting task...")
+		_, err = task.Delete(ctx, client.WithProcessKill)
 		if err != nil {
 			log.Printf("Warning: failed to delete task: %v", err)
 		} else {
