@@ -149,6 +149,15 @@ func (s *Server) CreateContainer(ctx context.Context, containerName string, imag
 		return nil, fmt.Errorf("failed to create container: %v", err)
 	}
 
+	// start container
+	startContainerReq := &runtimeapi.StartContainerRequest{
+		ContainerId: responseContainer.ContainerId,
+	}
+	_, err = s.StartContainer(ctx, startContainerReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start container: %v", err)
+	}
+
 	return responseContainer, nil
 }
 
