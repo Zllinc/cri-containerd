@@ -82,6 +82,7 @@ func (s *Server) RunPodSandbox(ctx context.Context, request *runtimeapi.RunPodSa
 
 // 创建容器: 调用了runPodSandbox
 func (s *Server) CreateContainer(ctx context.Context, containerName string, image client.Image, namespace string) (*runtimeapi.CreateContainerResponse, error) {
+	log.Println("context.Namespace: ", ctx.Value("namespace"))
 	// 先创建PodSandbox
 	// podName := "test-pod"
 	cgroupParent := "system.slice"
