@@ -44,7 +44,7 @@ var createCmd = &cobra.Command{
 		}
 
 		// 创建容器
-		containerResponse, err := server.CreateContainer(ctx, containerName, image)
+		containerResponse, err := server.CreateContainer(ctx, containerName, image, namespace)
 		if err != nil {
 			log.Fatalf("failed to create container: %v", err)
 		}
