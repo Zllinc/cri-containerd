@@ -33,7 +33,7 @@ var createCmd = &cobra.Command{
 
 		// 拉取镜像
 		ctx := namespaces.WithNamespace(context.Background(), namespace)
-		log.Println("create.go: ctx.Namespace: ", ctx.Value("namespace"))
+		log.Printf("create.go: setting containerd namespace to: %s", namespace)
 		image, err := server.PullImage(ctx, imageName)
 		if err != nil {
 			log.Fatalf("failed to pull image: %v", err)

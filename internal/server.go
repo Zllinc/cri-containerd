@@ -16,6 +16,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
+
+	"github.com/containerd/containerd/v2/core/containers"
+	"github.com/containerd/containerd/v2/pkg/cio"
+	"github.com/containerd/containerd/v2/pkg/oci"
 )
 
 type Server struct {
@@ -198,4 +202,45 @@ func (s *Server) DeleteContainer(ctx context.Context, containerID string) error 
 		return fmt.Errorf("failed to delete container: %v", err)
 	}
 	return nil
+}
+
+// CreateContainerDirectly 直接使用 containerd API 创建容器，绕过 CRI
+func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, imageName, namespace string) (string, error) {
+	// 1. 获取镜像
+	image, err := s.containerdClient.GetImage(ctx, imageName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get image: %v", err)
+	}
+
+	// 2. 创建容器规格
+	spec, err := oci.GenerateSpec(ctx, s.containerdClient, &containers.Container{
+		ID: containerName,
+	}, oci.WithImageConfig(image), oci.WithProcessArgs("/bin/sh", "-c", "while true; do echo 'Hello, World!'; sleep 5; done"))
+	if err != nil {
+		return "", fmt.Errorf("failed to generate spec: %v", err)
+	}
+
+	// 3. 创建容器
+	container, err := s.containerdClient.NewContainer(ctx, containerName,
+		client.WithImage(image),
+		client.WithNewSnapshot(containerName+"-snapshot", image),
+		client.WithSpec(spec),
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to create container: %v", err)
+	}
+
+	// 4. 创建任务（相当于启动容器）
+	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
+	if err != nil {
+		return "", fmt.Errorf("failed to create task: %v", err)
+	}
+
+	// 5. 启动任务
+	err = task.Start(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to start task: %v", err)
+	}
+
+	return container.ID(), nil
 }
