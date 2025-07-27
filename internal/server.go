@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/containerd/containerd/v2/pkg/namespaces"
 	"github.com/containerd/containerd/v2/client"
 	"github.com/containerd/nerdctl/v2/pkg/api/types"
 	"github.com/containerd/nerdctl/v2/pkg/cmd/container"
@@ -339,70 +340,71 @@ func (s *Server) ListContainers(ctx context.Context) ([]string, error) {
 
 // CleanupOrphanContainers 清理孤儿容器（垃圾回收）
 func (s *Server) CleanupOrphanContainers(ctx context.Context, namespace string) error {
+	// 将 namespace 注入到 context 中
+	ctx = namespaces.WithNamespace(ctx, namespace)
 
 	log.Printf("Starting GC in namespace: %s", namespace)
 
 	// get all container in namespace
-	containers,err:=s.containerdClient.Containers(ctx)
-	if err !=nil{
+	containers, err := s.containerdClient.Containers(ctx)
+	if err != nil {
 		log.Printf("Failed to get containers, err: %v", err)
 		return err
 	}
 
 	var deletedContainersCount int
-	for _,container:=range containers{
+	for _, container := range containers {
 		// if get container's labels failed, skip
-		labels,err:=container.Labels(ctx)
-		if err!=nil{
-			log.Printf("Failed to get labels for container %s, err: %v",container.ID(),err)
+		labels, err := container.Labels(ctx)
+		if err != nil {
+			log.Printf("Failed to get labels for container %s, err: %v", container.ID(), err)
 			continue
 		}
 		// if container is not devbox container, skip
-		if _,ok:=labels["devbox.sealos.io/content-id"];!ok{
-			continue 
+		if _, ok := labels["devbox.sealos.io/content-id"]; !ok {
+			continue
 		}
 
 		// get container task
-		task,err:=container.Task(ctx,nil)
-		if err!=nil{
+		task, err := container.Task(ctx, nil)
+		if err != nil {
 			// delete orphan container
-			log.Printf("Found Orphan Container: %s",container.ID())
-			err=container.Delete(ctx,client.WithSnapshotCleanup)
-			if err!=nil{
-				log.Printf("Failed to delete Orphan Container %s, err: %v",container.ID(),err)
-			}else{
-				log.Printf("Deleted Orphan Container: %s successfully",container.ID())
+			log.Printf("Found Orphan Container: %s", container.ID())
+			err = container.Delete(ctx, client.WithSnapshotCleanup)
+			if err != nil {
+				log.Printf("Failed to delete Orphan Container %s, err: %v", container.ID(), err)
+			} else {
+				log.Printf("Deleted Orphan Container: %s successfully", container.ID())
 				deletedContainersCount++
 			}
 			continue
 		}
 
-		status,err:=task.Status(ctx)
-		if err!=nil{
-			log.Printf("Failed to get task status for container %s, err: %v",container.ID(),err)
+		status, err := task.Status(ctx)
+		if err != nil {
+			log.Printf("Failed to get task status for container %s, err: %v", container.ID(), err)
 			continue
 		}
-		if status.Status!=client.Running{
+		if status.Status != client.Running {
 			// delete task
-			_,err=task.Delete(ctx,client.WithProcessKill)
-			if err!=nil{
-				log.Printf("Failed to delete task for container %s, err: %v",container.ID(),err)
+			_, err = task.Delete(ctx, client.WithProcessKill)
+			if err != nil {
+				log.Printf("Failed to delete task for container %s, err: %v", container.ID(), err)
 			}
 
 			// delete container and snapshot
-			err=container.Delete(ctx,client.WithSnapshotCleanup)
-			if err!=nil{
-				log.Printf("Failed to delete container %s, err: %v",container.ID(),err)
-			}else{
-				log.Printf("Deleted Container: %s successfully",container.ID())
+			err = container.Delete(ctx, client.WithSnapshotCleanup)
+			if err != nil {
+				log.Printf("Failed to delete container %s, err: %v", container.ID(), err)
+			} else {
+				log.Printf("Deleted Container: %s successfully", container.ID())
 				deletedContainersCount++
 			}
 		}
 
 	}
-	log.Printf("GC completed, deleted %d containers",deletedContainersCount)
+	log.Printf("GC completed, deleted %d containers", deletedContainersCount)
 	return nil
-
 
 	// log.Printf("Starting cleanup in namespace: %s", namespace)
 

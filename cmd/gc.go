@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
+	// "github.com/containerd/containerd/v2/pkg/namespaces"
 
 	"cri-containerd/internal"
 )
@@ -26,6 +27,9 @@ var gcCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Failed to create server: %v", err)
 		}
+
+		// 设置正确的 namespace 上下文
+		// ctx := namespaces.WithNamespace(context.Background(), gcNamespace)
 
 		// 执行垃圾回收
 		err = server.CleanupOrphanContainers(context.Background(), gcNamespace)
