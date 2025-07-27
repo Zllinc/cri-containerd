@@ -37,7 +37,7 @@ var commitCmd = &cobra.Command{
 			log.Fatalf("failed to commit container: %v", err)
 		}
 
-		log.Default().Printf("committed image: %s successfully! \n", committedImageName)
+		log.Default().Printf("✅ Committed image: %s successfully! \n", committedImageName)
 	},
 }
 
