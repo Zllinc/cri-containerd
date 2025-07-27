@@ -339,61 +339,126 @@ func (s *Server) ListContainers(ctx context.Context) ([]string, error) {
 
 // CleanupOrphanContainers 清理孤儿容器（垃圾回收）
 func (s *Server) CleanupOrphanContainers(ctx context.Context, namespace string) error {
-	log.Printf("Starting cleanup in namespace: %s", namespace)
 
-	// 获取所有容器
-	containers, err := s.containerdClient.Containers(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to list containers: %v", err)
+	log.Printf("Starting GC in namespace: %s", namespace)
+
+	// get all container in namespace
+	containers,err:=s.containerdClient.Containers(ctx)
+	if err !=nil{
+		log.Printf("Failed to get containers, err: %v", err)
+		return err
 	}
 
-	var deletedCount int
-	for _, container := range containers {
-		// 检查容器是否有对应的运行任务
-		task, err := container.Task(ctx, nil)
-		if err != nil {
-			// 没有任务的容器可能是孤儿容器
-			log.Printf("Found orphan container (no task): %s", container.ID())
+	var deletedContainersCount int
+	for _,container:=range containers{
+		// if get container's labels failed, skip
+		labels,err:=container.Labels(ctx)
+		if err!=nil{
+			log.Printf("Failed to get labels for container %s, err: %v",container.ID(),err)
+			continue
+		}
+		// if container is not devbox container, skip
+		if _,ok:=labels["devbox.sealos.io/content-id"];!ok{
+			continue 
+		}
 
-			// 尝试删除
-			err = container.Delete(ctx, client.WithSnapshotCleanup)
-			if err != nil {
-				log.Printf("Failed to delete orphan container %s: %v", container.ID(), err)
-			} else {
-				log.Printf("Deleted orphan container: %s", container.ID())
-				deletedCount++
+		// get container task
+		task,err:=container.Task(ctx,nil)
+		if err!=nil{
+			// delete orphan container
+			log.Printf("Found Orphan Container: %s",container.ID())
+			err=container.Delete(ctx,client.WithSnapshotCleanup)
+			if err!=nil{
+				log.Printf("Failed to delete Orphan Container %s, err: %v",container.ID(),err)
+			}else{
+				log.Printf("Deleted Orphan Container: %s successfully",container.ID())
+				deletedContainersCount++
 			}
 			continue
 		}
 
-		// 检查任务状态
-		status, err := task.Status(ctx)
-		if err != nil {
-			log.Printf("Failed to get task status for %s: %v", container.ID(), err)
+		status,err:=task.Status(ctx)
+		if err!=nil{
+			log.Printf("Failed to get task status for container %s, err: %v",container.ID(),err)
 			continue
 		}
-
-		// 清理已停止的容器
-		if status.Status != "running" {
-			log.Printf("Found stopped container: %s (status: %s)", container.ID(), status.Status)
-
-			// 删除任务
-			_, err = task.Delete(ctx)
-			if err != nil {
-				log.Printf("Failed to delete task for %s: %v", container.ID(), err)
+		if status.Status!=client.Running{
+			// delete task
+			_,err=task.Delete(ctx,client.WithProcessKill)
+			if err!=nil{
+				log.Printf("Failed to delete task for container %s, err: %v",container.ID(),err)
 			}
 
-			// 删除容器
-			err = container.Delete(ctx, client.WithSnapshotCleanup)
-			if err != nil {
-				log.Printf("Failed to delete stopped container %s: %v", container.ID(), err)
-			} else {
-				log.Printf("Deleted stopped container: %s", container.ID())
-				deletedCount++
+			// delete container and snapshot
+			err=container.Delete(ctx,client.WithSnapshotCleanup)
+			if err!=nil{
+				log.Printf("Failed to delete container %s, err: %v",container.ID(),err)
+			}else{
+				log.Printf("Deleted Container: %s successfully",container.ID())
+				deletedContainersCount++
 			}
 		}
-	}
 
-	log.Printf("Cleanup completed. Deleted %d containers", deletedCount)
+	}
+	log.Printf("GC completed, deleted %d containers",deletedContainersCount)
 	return nil
+
+
+	// log.Printf("Starting cleanup in namespace: %s", namespace)
+
+	// // 获取所有容器
+	// containers, err := s.containerdClient.Containers(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to list containers: %v", err)
+	// }
+
+	// var deletedCount int
+	// for _, container := range containers {
+	// 	// 检查容器是否有对应的运行任务
+	// 	task, err := container.Task(ctx, nil)
+	// 	if err != nil {
+	// 		// 没有任务的容器可能是孤儿容器
+	// 		log.Printf("Found orphan container (no task): %s", container.ID())
+
+	// 		// 尝试删除
+	// 		err = container.Delete(ctx, client.WithSnapshotCleanup)
+	// 		if err != nil {
+	// 			log.Printf("Failed to delete orphan container %s: %v", container.ID(), err)
+	// 		} else {
+	// 			log.Printf("Deleted orphan container: %s", container.ID())
+	// 			deletedCount++
+	// 		}
+	// 		continue
+	// 	}
+
+	// 	// 检查任务状态
+	// 	status, err := task.Status(ctx)
+	// 	if err != nil {
+	// 		log.Printf("Failed to get task status for %s: %v", container.ID(), err)
+	// 		continue
+	// 	}
+
+	// 	// 清理已停止的容器
+	// 	if status.Status != "running" {
+	// 		log.Printf("Found stopped container: %s (status: %s)", container.ID(), status.Status)
+
+	// 		// 删除任务
+	// 		_, err = task.Delete(ctx)
+	// 		if err != nil {
+	// 			log.Printf("Failed to delete task for %s: %v", container.ID(), err)
+	// 		}
+
+	// 		// 删除容器
+	// 		err = container.Delete(ctx, client.WithSnapshotCleanup)
+	// 		if err != nil {
+	// 			log.Printf("Failed to delete stopped container %s: %v", container.ID(), err)
+	// 		} else {
+	// 			log.Printf("Deleted stopped container: %s", container.ID())
+	// 			deletedCount++
+	// 		}
+	// 	}
+	// }
+
+	// log.Printf("Cleanup completed. Deleted %d containers", deletedCount)
+	// return nil
 }
