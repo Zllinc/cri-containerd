@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+
 	// "io"
 	"log"
 	"os"
@@ -288,28 +289,28 @@ func (s *Server) DeleteContainerDirectly(ctx context.Context, containerName stri
 		return fmt.Errorf("failed to load container: %v", err)
 	}
 
-	// // 2. 尝试获取并停止任务
-	// task, err := container.Task(ctx, nil)
-	// if err == nil {
-	// 	log.Printf("Stopping task for container: %s", containerName)
+	// 2. 尝试获取并停止任务
+	task, err := container.Task(ctx, nil)
+	if err == nil {
+		log.Printf("Stopping task for container: %s", containerName)
 
-	// 	// 直接强制杀死任务（避免等待问题）
-	// 	err = task.Kill(ctx, 9) // SIGKILL
-	// 	if err != nil {
-	// 		log.Printf("Warning: failed to send SIGKILL: %v", err)
-	// 	} else {
-	// 		log.Printf("Sent SIGKILL to task")
-	// 	}
+		// 直接强制杀死任务（避免等待问题）
+		err = task.Kill(ctx, 9) // SIGKILL
+		if err != nil {
+			log.Printf("Warning: failed to send SIGKILL: %v", err)
+		} else {
+			log.Printf("Sent SIGKILL to task")
+		}
 
-	// 	// 简短等待后删除任务
-	// 	log.Printf("Deleting task...")
-	// 	_, err = task.Delete(ctx, client.WithProcessKill)
-	// 	if err != nil {
-	// 		log.Printf("Warning: failed to delete task: %v", err)
-	// 	} else {
-	// 		log.Printf("Task deleted for container: %s", containerName)
-	// 	}
-	// }
+		// 简短等待后删除任务
+		log.Printf("Deleting task...")
+		_, err = task.Delete(ctx, client.WithProcessKill)
+		if err != nil {
+			log.Printf("Warning: failed to delete task: %v", err)
+		} else {
+			log.Printf("Task deleted for container: %s", containerName)
+		}
+	}
 
 	// 3. 删除容器（包含快照）
 	err = container.Delete(ctx)
