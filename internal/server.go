@@ -3,8 +3,9 @@ package internal
 import (
 	"context"
 	"fmt"
-	"io"
+	// "io"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/containerd/containerd/v2/client"
@@ -179,7 +180,8 @@ func (s *Server) CommitContainer(ctx context.Context, containerID, committedImag
 		InsecureRegistry: true,
 	}
 	opt := types.ContainerCommitOptions{
-		Stdout:   io.Discard,
+		// Stdout:   io.Discard,
+		Stdout:   os.Stdout,
 		GOptions: global,
 		Pause:    false,
 		DevboxOptions: types.DevboxOptions{
