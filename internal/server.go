@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	runtimeapi "k8s.io/cri-api/pkg/apis/runtime/v1"
 
-	"github.com/containerd/containerd/v2/pkg/cio"
+	// "github.com/containerd/containerd/v2/pkg/cio"
 	"github.com/containerd/containerd/v2/pkg/oci"
 )
 
@@ -215,8 +215,8 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 		"devbox.sealos.io/content-id": "cri-containerd-direct",
 		"namespace":                   namespace,
 		"image.name":                  imageName,
-		"container.type":              "direct",
-		"description":                 "Container created directly via containerd API",
+		// "container.type":              "direct",
+		// "description":                 "Container created directly via containerd API",
 	}
 
 	container, err := s.containerdClient.NewContainer(ctx, containerName,
@@ -232,17 +232,17 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 		return "", fmt.Errorf("failed to create container: %v", err)
 	}
 
-	// 3. 创建任务：启动容器
-	task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
-	if err != nil {
-		return "", fmt.Errorf("failed to create task: %v", err)
-	}
+	// // 3. 创建任务：启动容器
+	// task, err := container.NewTask(ctx, cio.NewCreator(cio.WithStdio))
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to create task: %v", err)
+	// }
 
-	// 4. 启动任务
-	err = task.Start(ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to start task: %v", err)
-	}
+	// // 4. 启动任务
+	// err = task.Start(ctx)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to start task: %v", err)
+	// }
 
 	return container.ID(), nil
 }
