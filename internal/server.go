@@ -212,7 +212,7 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 	if err != nil {
         // 镜像不存在，尝试拉取
         log.Printf("Image %s not found, pulling...", imageName)
-        image, err = s.containerdClient.Pull(ctx, imageName)
+        image, err = s.containerdClient.Pull(ctx, imageName, client.WithPullUnpack)
         if err != nil {
             return "", fmt.Errorf("failed to pull image %s: %v", imageName, err)
         }
