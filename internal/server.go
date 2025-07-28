@@ -210,8 +210,17 @@ func (s *Server) CreateContainerDirectly(ctx context.Context, containerName, ima
 	// 1. 获取镜像
 	image, err := s.containerdClient.GetImage(ctx, imageName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get image: %v", err)
-	}
+        // 镜像不存在，尝试拉取
+        log.Printf("Image %s not found, pulling...", imageName)
+        image, err = s.containerdClient.Pull(ctx, imageName)
+        if err != nil {
+            return "", fmt.Errorf("failed to pull image %s: %v", imageName, err)
+        }
+    }
+	// if err != nil {
+		
+	// 	return "", fmt.Errorf("failed to get image: %v", err)
+	// }
 
 	// 2. 创建容器
 	// 添加 annotations/labels
